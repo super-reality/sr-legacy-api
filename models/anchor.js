@@ -5,14 +5,7 @@ const anchorSchema = new Schema({
 
     name: {
         type: String,
-        index: true,
-        required: true
 
-    },
-    type: {
-        type: String,
-        requried: true,
-        index: true
     },
     templates: {
         type: Array,
@@ -23,7 +16,6 @@ const anchorSchema = new Schema({
     },
     cvMatchValue: {
         type: Number,
-        default: 0
 
     },
     cvCanvas: {

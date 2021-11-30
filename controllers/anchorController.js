@@ -6,7 +6,7 @@ const statusCodes = require("http-status-codes")
 const db = mongoose.connection
 
 const createAnchor = async function (request, response) {
-
+console.log(request)
     const {
         name,
         type,
@@ -53,8 +53,8 @@ const createAnchor = async function (request, response) {
     anchor.cvApplyThreshold = cvApplyThreshold ? cvApplyThreshold : anchor.cvApplyThreshold
     anchor.cvThreshold = cvThreshold ? cvThreshold : anchor.cvThreshold
     anchor.createdBy = createdBy
-    anchor.createdAt = createdAt
-    anchor.updatedAt = updatedAt
+    anchor.createdAt = new Date()
+    anchor.updatedAt = new Date()
 
     const transactionOptions = {
         readPreference: 'primary',
