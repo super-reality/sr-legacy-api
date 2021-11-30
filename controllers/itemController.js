@@ -8,18 +8,17 @@ const mongoose = require("mongoose")
 const statusCodes = require("http-status-codes")
 const db = mongoose.connection
 
-// var fs = require('fs');
-// var util = require('util');
-// var log_file = fs.createWriteStream(__dirname + '/debug.log', { flags: 'w' });
-// var log_stdout = process.stdout;
-// console.log = function (d) { //
-//     log_file.write(util.format(d) + '\n');
-//     log_stdout.write(util.format(d) + '\n');
-// };
+var fs = require('fs');
+var util = require('util');
+var log_file = fs.createWriteStream(__dirname + '/debug.log', { flags: 'w' });
+var log_stdout = process.stdout;
+console.log = function (d) { //
+    log_file.write(util.format(d) + '\n');
+    log_stdout.write(util.format(d) + '\n');
+};
 
 
 const createItem = async function (request, response) {
-
 
     const {
         name,
@@ -47,42 +46,11 @@ const createItem = async function (request, response) {
     }
 
     const session = await db.startSession();
-    
+
     const responses = {};
 
     const item = Item()
     item.type = type;
-    item.name = name ? name :item.name;
-    item.anchor = anchor ? anchor : item.anchor;
-    item.description = description? description : item.description
-    item.relativePos = relativePos? relativePos: item.relativePos
-    item.trigger = trigger? trigger: item.trigger
-    item.destination = destination ? destination: item.destination
-    item.transition = transition? transition : item.transition
-    item.type = item.type
-
-    if (type == 'audio') {
-        item.showPopup = request.body.showPopup ? request.body.showPopup : false;
-        item.url = request.body.url ? request.body.url : '';
-        item.text = request.body.text ? request.body.text : '';
-    }
-    if (type == 'focus highlights') {
-        item.focus = request.body.focus ? request.body.focus : '';
-
-    }
-    if (type == 'image') {
-        item.url = request.body.url ? request.body.url : '';
-
-    }
-    if (type == 'video') {
-        item.url = request.body.url ? request.body.url : '';
-        item.loop = request.body.loop ? request.body.loop : false;
-
-
-    }
-
-
-
 
 
     const transactionOptions = {
@@ -92,19 +60,19 @@ const createItem = async function (request, response) {
     };
 
     try {
-        
-            const transactionResults = await session.withTransaction(async () => {
-                const createdItem = await item.save({ session })
-                responses['item'] = createdItem
-            }, transactionOptions)
+
+        const transactionResults = await session.withTransaction(async () => {
+            const createdItem = await item.save({ session })
+            responses['item'] = createdItem
+        }, transactionOptions)
 
         if (transactionResults) {
-            
+
             responses['err_code'] = 0
             response.status(statusCodes.OK).send(responses)
 
         } else {
-            
+
 
             console.message("The transaction was intentionally aborted.");
             response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
@@ -113,7 +81,7 @@ const createItem = async function (request, response) {
             })
         }
     } catch (err) {
-        
+
 
         response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
             err_code: statusCodes.INTERNAL_SERVER_ERROR,
@@ -195,8 +163,8 @@ const updateItem = function (request, response) {
         endTime,
         autoStart,
         loop,
-        sourceMedia,
-        textContent,
+        url,
+        text,
         textSize,
         textFont,
         textColor,
@@ -212,7 +180,7 @@ const updateItem = function (request, response) {
     const { Id } = request.params;
 
     Item.findById(Id, async function (err, item) {
-        
+
 
         if (err != null) {
             response.status(ERR_STATUS.Bad_Request).json({
@@ -229,8 +197,8 @@ const updateItem = function (request, response) {
             item.endTime = endTime
             item.autoStart = autoStart
             item.loop = loop
-            item.sourceMedia = sourceMedia
-            item.textContent = textContent
+            item.url = url
+            item.text = text
             item.textSize = textSize
             item.textFont = textFont
             item.textColor = textColor
@@ -257,9 +225,9 @@ const updateItem = function (request, response) {
 }
 
 const deleteItem = function (request, response) {
-    
+
     const { Id } = request.params;
-    
+
     Item.deleteOne({ _id: Id }, function (err) {
         if (err != null) {
             response.status(ERR_STATUS.Bad_Request).json({
