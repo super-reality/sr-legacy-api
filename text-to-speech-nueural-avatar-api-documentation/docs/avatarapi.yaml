@@ -1,0 +1,22 @@
+paths:
+   :4444/avatar_api:
+     post:
+       summary: Uploads a file.
+       consumes:
+         - multipart/form-data
+       parameters:
+         - in: formData
+           name: audio
+           type: file
+           description: upload webm file
+         - in: formData
+           name: vidoe
+           type: file
+           description: upload mp4 file
+       responses:
+              200:
+                description: An object with a new signed up user
+                content:
+                  application/json:
+              401:
+                description: Unauthorized users

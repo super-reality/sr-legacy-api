@@ -1,21 +1,9 @@
-const Anchor = require("../models/anchor");
+const {Anchor} = require("../models");
 
-const { ERR_STATUS, ERR_CODE, Lesson_Sort } = require("../constants/constant")
-
-const fileupload = require("../utilities/upload")
-const path = require('path')
+const {ERR_STATUS, ERR_CODE} = require("../constants/constant")
 const mongoose = require("mongoose")
 const statusCodes = require("http-status-codes")
 const db = mongoose.connection
-
-// var fs = require('fs');
-// var util = require('util');
-// var log_file = fs.createWriteStream(__dirname + '/debug.log', { flags: 'w' });
-// var log_stdout = process.stdout;
-// console.log = function (d) { //
-//     log_file.write(util.format(d) + '\n');
-//     log_stdout.write(util.format(d) + '\n');
-// };
 
 const createAnchor = async function (request, response) {
 console.log(request)
@@ -24,10 +12,6 @@ console.log(request)
         type,
         templates,
         anchorFunction,
-        x,
-        y,
-        width,
-        height,
         cvMatchValue,
         cvCanvas,
         cvDelay,
@@ -39,52 +23,60 @@ console.log(request)
         updatedAt,
     } = request.body;
 
+    const anchorTypes = ['record', 'crop', 'url']
+
+    if (type == undefined) {
+        response.status(statusCodes.BAD_REQUEST).send({
+            err_code: statusCodes.BAD_REQUEST,
+            msg: "Anchor type is required"
+        })
+    } else {
+        const validItemType = anchorTypes.find(element => element === type);
+        if (!validItemType) {
+            response.status(statusCodes.BAD_REQUEST).send({
+                err_code: statusCodes.BAD_REQUEST,
+                msg: "Anchor type is not valid"
+            })
+        }
+    }
     const session = await db.startSession();
-
-
     const responses = {};
     var anchor = Anchor()
     anchor.name = name
     anchor.type = type
-    anchor.templates = templates
-    anchor.anchorFunction = anchorFunction
-    anchor.x = x
-    anchor.y = y
-    anchor.width = width
-    anchor.height = height
-    anchor.cvMatchValue = cvMatchValue
-    anchor.cvCanvas = cvCanvas
-    anchor.cvDelay = cvDelay
-    anchor.cvGrayscale = cvGrayscale
-    anchor.cvApplyThreshold = cvApplyThreshold
-    anchor.cvThreshold = cvThreshold
+    anchor.templates = templates ? templates : []
+    anchor.anchorFunction = anchorFunction ? anchorFunction : anchor.anchorFunction
+    anchor.cvMatchValue = cvMatchValue ? cvMatchValue : anchor.cvMatchValue
+    anchor.cvCanvas = cvCanvas ? cvCanvas : anchor.cvCanvas
+    anchor.cvDelay = cvDelay ? cvDelay : anchor.cvDelay
+    anchor.cvGrayscale = cvGrayscale ? cvGrayscale : anchor.cvGrayscale
+    anchor.cvApplyThreshold = cvApplyThreshold ? cvApplyThreshold : anchor.cvApplyThreshold
+    anchor.cvThreshold = cvThreshold ? cvThreshold : anchor.cvThreshold
     anchor.createdBy = createdBy
     anchor.createdAt = new Date()
     anchor.updatedAt = new Date()
 
     const transactionOptions = {
         readPreference: 'primary',
-        readConcern: { level: 'local' },
-        writeConcern: { w: 'majority' }
+        readConcern: {level: 'local'},
+        writeConcern: {w: 'majority'}
     };
-
     try {
-
         const transactionResults = await session.withTransaction(async () => {
-            const createdAnchor = await anchor.save({ session })
+            const createdAnchor = await anchor.save({session})
             responses['anchor'] = createdAnchor
         }, transactionOptions)
 
         if (transactionResults) {
             responses['err_code'] = 0
-            response.status(statusCodes.OK).send(responses)
+            response.status(statusCodes.CREATED).send(responses)
 
         } else {
 
             console.message("The transaction was intentionally aborted.");
             response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
                 err_code: statusCodes.INTERNAL_SERVER_ERROR,
-                message: "Sorry we were not able to create this anchor  111"
+                message: "Sorry we were not able to create this anchor"
             })
         }
     } catch (err) {
@@ -92,141 +84,110 @@ console.log(request)
             err_code: statusCodes.INTERNAL_SERVER_ERROR,
             message: err,
             internalError: err
-
         })
-
     } finally {
         session.endSession();
     }
-
 }
-
-const searchAnchor = async function (request, response) {
-    var {
-        //the term to search against 'name'
-        query,
-        //ascending / decs
-        sort,
-        //what fields to return 
-        fields,
-    } = request.body;
-
-    var condition = {}
-    // Add more query options - name, description, type, etc..
-    // Currently only searching against name
-    if (query && query != "") {
-        condition["name"] = { $regex: query, $options: 'i' }
-    }
-
-    // Add sort options
-    sortField = sort;
-
-    Anchor.find(condition, fields, { sort: sortField }).limit(100).find(function (err, lessons) {
-        if (err != null) {
-            response.status(ERR_STATUS.Bad_Request).json({
-                error: err
-            });
-        } else {
-            response.json({
-                err_code: ERR_CODE.success,
-                lessons
-            });
-        }
-    });
-}
-
 const getAnchorById = async function (request, response) {
-    // 
-    const { Id } = request.params;
-
-    Anchor.findById(Id, async function (err, anchor) {
-        if (err != null) {
-            response.status(ERR_STATUS.Bad_Request).json({
-                error: err
-            });
-        } else {
-            response.json({
-                err_code: ERR_CODE.success,
-                anchor
-            });
+    try {
+        anchor = await Anchor.findById({ _id: request.params.id })
+        if (anchor) {
+            response.status(statusCodes.OK).send({ err_code: 0, anchor })
         }
-    })
-
+        else {
+            response.status(statusCodes.NOT_FOUND).send({ err_code: statusCodes.NOT_FOUND, chapters: {}, message: "This anchor does not exist" })
+        }
+    }
+    catch (error) {
+        response.status(statusCodes.INTERNAL_SERVER_ERROR).send({ err_code: statusCodes.INTERNAL_SERVER_ERROR, message: "Could not fetch anchor", internalError: error })
+    }
 }
-
-const updateAnchor = function (request, response) {
-    // 
+const updateAnchorById = async function (request, response) {
     const {
         name,
+        anchor_id,
         type,
         templates,
         anchorFunction,
-        x,
-        y,
-        width,
-        height,
         cvMatchValue,
         cvCanvas,
         cvDelay,
         cvGrayscale,
         cvApplyThreshold,
         cvThreshold,
-        createdBy,
-        createdAt,
-        updatedAt,
     } = request.body;
 
+    const session = await db.startSession();
+    const transactionOptions = {
+        readPreference: 'primary',
+        readConcern: {level: 'local'},
+        writeConcern: {w: 'majority'}
+    };
+    try {
+        var anchorUpdated = false
+        var responses = {}
 
-    const { Id } = request.params;
-    
-    
-    
-    
+        const transactionResults = await session.withTransaction(async () => {
 
-    Anchor.findById(Id, async function (err, anchor) {
-        
-        if (err != null) {
-            response.status(ERR_STATUS.Bad_Request).json({
-                error: err
-            });
-        } else {
-            anchor.name = name
-            anchor.type = type
-            anchor.templates = templates
-            anchor.anchorFunction = anchorFunction
-            anchor.x = x
-            anchor.y = y
-            anchor.width = width
-            anchor.height = height
-            anchor.cvMatchValue = cvMatchValue
-            anchor.cvCanvas = cvCanvas
-            anchor.cvDelay = cvDelay
-            anchor.cvGrayscale = cvGrayscale
-            anchor.cvApplyThreshold = cvApplyThreshold
-            anchor.cvThreshold = cvThreshold
-            anchor.createdBy = createdBy
-            anchor.createdAt = createdAt
-            anchor.updatedAt = updatedAt
-            anchor.save(async function (err) {
-                if (err != null) {
-                    response.status(ERR_STATUS.Bad_Request).json({
-                        error: err
-                    });
+            const currentAnchor = await Anchor.findById({_id: anchor_id, session})
+            if (currentAnchor) {
+                currentAnchor.name = name ? name : currentAnchor.name
+                currentAnchor.type = type ? type : currentAnchor.type
+                currentAnchor.templates = templates ? templates : currentAnchor.templates
+                currentAnchor.anchorFunction = anchorFunction ? anchorFunction : currentAnchor.anchorFunction
+                currentAnchor.cvMatchValue = cvMatchValue ? cvMatchValue : currentAnchor.cvMatchValue
+                currentAnchor.cvCanvas = cvCanvas ? cvCanvas : currentAnchor.cvCanvas
+                currentAnchor.cvDelay = cvDelay ? cvDelay : currentAnchor.cvDelay
+                currentAnchor.cvGrayscale = cvGrayscale
+                currentAnchor.cvApplyThreshold = cvApplyThreshold
+                currentAnchor.cvThreshold = cvThreshold ? cvThreshold : currentAnchor.cvThreshold
+                currentAnchor.updatedAt = new Date()
+
+                updatedAnchor = await currentAnchor.save({session})
+                if (updatedAnchor) {
+                    anchorUpdated = true
+                    responses['anchor'] = updatedAnchor
                 } else {
-                    response.json({
-                        err_code: ERR_CODE.success,
-                        anchor
-                    });
+                    response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
+                        err_code: statusCodes.INTERNAL_SERVER_ERROR,
+                        message: "Could not update this anchor"
+                    })
                 }
+            } else {
+                response.status(statusCodes.NOT_FOUND).send({
+                    err_code: statusCodes.NOT_FOUND,
+                    "message": "This anchor does not exist"
+                })
+            }
+            // save collection document
+        }, transactionOptions)
+        if (transactionResults) {
+            responses['err_code'] = 0
+            response.status(statusCodes.OK).send(responses)
+        } else {
+
+            console.log("The transaction was intentionally aborted.");
+            response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
+                err_code: statusCodes.INTERNAL_SERVER_ERROR,
+                message: "Could not update this anchor"
             })
+
         }
-    })
-
+    } catch (err) {
+        response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
+            err_code: statusCodes.INTERNAL_SERVER_ERROR,
+            message: "Sorry we were not able to update this anchor",
+            internalError: err
+        })
+        console.log("The transaction was aborted due to an unexpected error: " + err);
+    } finally {
+        session.endSession();
+    }
 }
-
 const deleteAnchor = function (request, response) {
-    const { Id } = request.params;
-    Anchor.deleteOne({ _id: Id }, function (err) {
+    const {Id} = request.params;
+    Anchor.deleteOne({_id: Id}, function (err) {
         if (err != null) {
             response.status(ERR_STATUS.Bad_Request).json({
                 error: err
@@ -241,7 +202,7 @@ const deleteAnchor = function (request, response) {
 }
 
 module.exports = {
-    createAnchor, searchAnchor, getAnchorById, updateAnchor, deleteAnchor
+    createAnchor, getAnchorById, updateAnchorById, deleteAnchor
 }
 
 

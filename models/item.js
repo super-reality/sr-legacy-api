@@ -14,8 +14,8 @@ const itemSchema = new Schema({
 
     },
     anchor: {
-        type: Array,
-        default: []
+        type: Boolean,
+        default: true
     },
     description: {
         type: String
@@ -38,6 +38,9 @@ const itemSchema = new Schema({
             type: Number,
 
     },
+    effect: {
+        type: String,
+    },
     showPopup: {
         type: Boolean,
     },
@@ -50,8 +53,28 @@ const itemSchema = new Schema({
     focus: {
         type: String,
     },
+    fullScreen: {
+        type: Boolean,
+    },
     loop: {
         type: Boolean,
+
+    },
+    parameters: {
+        type: Object,
+        default: {}
+    },
+    endOn: {
+        type: Array,
+        default: []
+    },
+    source: {
+        type: String,
+        default: ''
+    },
+    muted: {
+        type: Boolean,
+        default: false
 
     },
     createdBy: {type: ObjectId},
@@ -59,8 +82,9 @@ const itemSchema = new Schema({
     updatedAt: {type: Date},
 
 
-});
+}, {minimize: false});
 
 const Item = new model("Item", itemSchema);
+
 
 module.exports = Item;

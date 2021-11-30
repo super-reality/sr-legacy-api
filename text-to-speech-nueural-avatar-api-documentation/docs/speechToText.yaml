@@ -1,0 +1,18 @@
+paths:
+   :5000/speech_to_text:
+     post:
+       summary: Uploads a file.
+       consumes:
+         - multipart/form-data
+       parameters:
+         - in: formData
+           name: audio
+           type: file
+           description: Upload .webm file
+       responses:
+              200:
+                description: An object with a new signed up user
+                content:
+                  application/json:
+              401:
+                description: Unauthorized users

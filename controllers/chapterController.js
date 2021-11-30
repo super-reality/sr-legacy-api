@@ -1,4 +1,4 @@
-const { Chapter } = require("../models")
+const { Chapter,Step } = require("../models")
 const mongoose = require("mongoose")
 const statusCodes = require("http-status-codes")
 const db = mongoose.connection
@@ -37,9 +37,8 @@ const createChapter = async function (request, response) {
 
         }, transactionOptions)
         if (transactionResults) {
-            console.log("chapter created successfully")
             responses['err_code'] = 0
-            response.status(statusCodes.OK).send(responses)
+            response.status(statusCodes.CREATED).send(responses)
 
         } else {
             console.message("The transaction was intentionally aborted.");
@@ -60,7 +59,6 @@ const createChapter = async function (request, response) {
         session.endSession();
     }
 }
-
 const getChapters = async function (request, response) {
     try {
         chapters = await Chapter.find({})
@@ -74,10 +72,7 @@ const getChapters = async function (request, response) {
     catch (error) {
         response.status(statusCodes.INTERNAL_SERVER_ERROR).send({ err_code: statusCodes.INTERNAL_SERVER_ERROR, message: "Could not fetch chapters", internalError: error })
     }
-
 }
-
-
 const getChaptersById = async function (request, response) {
     try {
         chapters = await Chapter.findById({ _id: request.params.id })
@@ -91,9 +86,7 @@ const getChaptersById = async function (request, response) {
     catch (error) {
         response.status(statusCodes.INTERNAL_SERVER_ERROR).send({ err_code: statusCodes.INTERNAL_SERVER_ERROR, message: "Could not fetch chapters", internalError: error })
     }
-
 }
-
 const updateChapterById = async function (request, response) {
 
     const session = await db.startSession();
@@ -102,7 +95,6 @@ const updateChapterById = async function (request, response) {
         readConcern: { level: 'local' },
         writeConcern: { w: 'majority' }
     };
-
     try {
 
         var chapterUpdated = false
@@ -115,8 +107,8 @@ const updateChapterById = async function (request, response) {
 
                 currentChapter.steps = request.body.steps ? request.body.steps : currentChapter.steps
                 currentChapter.name = request.body.name ? request.body.name : currentChapter.name
-
                 currentChapter.updatedAt = new Date()
+
                 updatedChapter = await currentChapter.save({ session })
                 if (updatedChapter) {
                     chapterUpdated = true
@@ -128,30 +120,50 @@ const updateChapterById = async function (request, response) {
             }
             else {
                 response.status(200).send({ err_code: 0, "message": "This chapter does not exist" })
-            }
-            // save collection document
-        }, transactionOptions)
+            }}, transactionOptions)
         if (transactionResults) {
             responses['err_code'] = 0
             response.status(statusCodes.OK).send(responses)
         } else {
-
             console.error("The transaction was intentionally aborted.");
             response.status(statusCodes.INTERNAL_SERVER_ERROR).send({ err_code: statusCodes.INTERNAL_SERVER_ERROR, message: "Could not update this chapter" })
-
         }
     } catch (err) {
         response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
             err_code: statusCodes.INTERNAL_SERVER_ERROR,
             message: "Sorry we were not able to update this chapter",
             internalError: err
-
         })
         console.error("The transaction was aborted due to an unexpected error: " + err);
     } finally {
         session.endSession();
     }
-
+}
+const getStepsByChapterId = async function (request, response) {
+    try {
+        allStepsId = []
+        chapter = await Chapter.findById({_id: request.params.id})
+        if (chapter) {
+            allSteps = chapter.steps
+            for (i = 0; i < allSteps.length; i++) {
+                if (allSteps[i]._id !== undefined) {
+                    allStepsId.push(allSteps[i]._id)
+                }
+            }
+            steps = await Step.find({_id: {$in: allStepsId}})
+            if (steps) {
+                response.status(200).send({err_code: 0, steps})
+            }
+        } else {
+            response.status(200).send({err_code: 0, lessons: {}, message: "This chapter does not exist"})
+        }
+    } catch (error) {
+        response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
+            err_code: statusCodes.INTERNAL_SERVER_ERROR,
+            message: "Could not fetch steps",
+            internalError: error
+        })
+    }
 }
 const addStepToChapter = async function (request, response) {
 
@@ -162,7 +174,6 @@ const addStepToChapter = async function (request, response) {
         writeConcern: { w: 'majority' }
     };
     responses = {}
-
     try {
 
         var stepExistFlag = false
@@ -188,9 +199,7 @@ const addStepToChapter = async function (request, response) {
             }
             else {
                 response.status(200).send({ err_code: 0, "message": "This chapter does not exist" })
-            }
-            // save collection document
-        }, transactionOptions)
+            }}, transactionOptions)
         if (transactionResults) {
             responses['err_code'] = 0
             response.status(statusCodes.OK).send(responses)
@@ -199,9 +208,7 @@ const addStepToChapter = async function (request, response) {
                 response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
                     err_code: statusCodes.INTERNAL_SERVER_ERROR,
                     message: "This chapter already added to this chapter"
-
                 })
-
             }
             else {
                 response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
@@ -209,9 +216,7 @@ const addStepToChapter = async function (request, response) {
                     message: "Sorry we were not able to update this chapter"
                 })
             }
-
             console.error("The transaction was intentionally aborted.");
-
         }
     } catch (err) {
         response.status(statusCodes.INTERNAL_SERVER_ERROR).send({
@@ -235,7 +240,6 @@ const deleteChapterById = async function (request, response) {
             else {
                 response.status(statusCodes.INTERNAL_SERVER_ERROR).send({ err_code: 0, message: "Could not delete this chapter" })
             }
-
         }
         else {
             response.status(statusCodes.NOT_FOUND).send({ err_code: 0, message: "This chapter does not exist" })
@@ -244,14 +248,12 @@ const deleteChapterById = async function (request, response) {
     catch (error) {
         response.status(statusCodes.INTERNAL_SERVER_ERROR).send({ err_code: statusCodes.INTERNAL_SERVER_ERROR, message: "Could not delete this chapter", internalError: error })
     }
-
 }
-
-
 module.exports = {
     createChapter,
     getChapters,
     getChaptersById,
+    getStepsByChapterId,
     updateChapterById,
     addStepToChapter,
     deleteChapterById

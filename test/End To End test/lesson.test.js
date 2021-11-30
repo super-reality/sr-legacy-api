@@ -16,7 +16,7 @@ const createLessonPayload = {
     "shortDescription": "again",
     "description": "will delete this",
     "medias": ["https://s3.us-west-1.amazonaws.com/openverse-lms/lesson-1601038233109.png"],
-    "visibility": [],
+    "visibility": false,
     "entry": 2,
     "setupFiles": ["https://s3.us-west-1.amazonaws.com/openverse-lms/lesson-1601038233109.png"],
     "setupScreenshots": ["https://s3.us-west-1.amazonaws.com/openverse-lms/lesson-1601038233109.png"],
@@ -32,7 +32,7 @@ const updateLessonPayload = {
     "shortDescription": "update short description",
     "description": "will update lesson ",
     "medias": ["https://s3.us-west-1.amazonaws.com/openverse-lms/lesson-1601038233109.png"],
-    "visibility": [],
+    "visibility": true,
     "entry": 2,
     "setupFiles": ["https://s3.us-west-1.amazonaws.com/openverse-lms/lesson-1601038233109.png"],
     "setupScreenshots": ["https://s3.us-west-1.amazonaws.com/openverse-lms/lesson-1601038233109.png"],
@@ -75,19 +75,19 @@ describe('API Tests', function () {
         });
     });
 
-
     describe('## Lessons', function () {
         it('should create a lesson', function (done) {
             request(app).post('/api/v1/lesson/create').send(createLessonPayload).set('Authorization', 'Bearer ' + token).end(function (err, res) {
                 if (res) {
                     lessonId = res.body.lesson._id
                     updateLessonPayload.lesson_id = lessonId
-                    expect(res.statusCode).to.equal(200);
+                    expect(res.statusCode).to.equal(201);
                     done();
                 }
             });
         });
     });
+
 
     describe('# Lessons', function () {
         it('should get a lesson by its id ', function (done) {
@@ -99,9 +99,20 @@ describe('API Tests', function () {
             });
         });
     });
+      describe('# Lessons', function () {
+        it('should get chapters of a lesson id ', function (done) {
+            request(app).get('/api/v1/lesson/chapters/' + lessonId).set('Authorization', 'Bearer ' + token).end(function (err, res) {
+                if (res) {
+                    expect(res.statusCode).to.equal(200);
+                    done();
+                }
+            });
+        });
+    });
+
 
     describe('# Lessons', function () {
-        it('should get a lesson by its id ', function (done) {
+        it('should update a lesson by its id ', function (done) {
             request(app).put('/api/v1/lesson/').send(updateLessonPayload).set('Authorization', 'Bearer ' + token).end(function (err, res) {
                 if (res) {
                     expect(res.statusCode).to.equal(200);

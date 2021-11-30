@@ -1,0 +1,116 @@
+schemes:
+  - http
+  - https
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+paths:
+  /subcategory/create:         # path of the user from your endpoint
+    post: # endpoint request type (post request)
+      tags:
+        - Sub category
+      security:
+        - Bearer: []
+      summary: Create Sub category
+      produces:
+      - application/json
+      parameters:
+      - name:       # name of parameter passed
+        type: string
+      - in: body
+        name: create subcategory
+        description: It enables a user to create subcategory
+        required: false
+        schema:
+          $ref: '#/definitions/subcategoryCreate'
+      responses:
+        201:
+          description: An object with a new subcategory
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/subcategoryCreate'
+        401:
+          description: Unauthorized users
+          
+  /subcategory:         # path of the user from your endpoint
+    get: # endpoint request type (post request)
+      tags:
+        - Sub category
+      security:
+        - Bearer: []
+      summary: Get All subcategory
+      produces:
+      - application/json
+      responses:
+        200:
+          description: An object with a subcategory list
+        401:
+          description: Unauthorized users
+  /subcategory/{id}:         # path of the user from your endpoint
+    get: # endpoint request type (post request)
+      tags:
+        - Sub category
+      security:
+        - Bearer: []
+      summary: Get Sub category By Id
+      produces:
+      - application/json
+      parameters:  # name of parameter passed
+        - in: path
+          name: id
+          description: It enables a user to fetch a subcategory
+          required: false
+          type: string
+      responses:
+        200:
+          description: An object with a subcategory values
+        401:
+          description: Unauthorized users
+  /subcategory/{subcategory_id}:         # path of the user from your endpoint
+    delete: # endpoint request type (post request)
+      tags:
+        - Sub category
+      security:
+        - Bearer: []
+      summary: Delete subcategory By Id
+      produces:
+      - application/json
+      parameters:  # name of parameter passed
+        - in: path
+          name: subcategory_id
+          description: It enables a user to delete a subcategory
+          required: false
+          type: string
+      responses:
+        200:
+          description: Delete Confirmation
+        401:
+          description: Unauthorized users
+definitions:        # Schema definition for the request body
+  subcategoryCreate:
+    type: object
+    properties:
+      name:
+        type: string
+        required: true
+      skills:
+        type: array
+        items:
+          type: string
+      rating:
+        type: integer
+  subcategoryUpdate:
+    type: object
+    properties:
+      name:
+        type: string
+        required: true
+      skills:
+        type: array
+        items:
+          type: string
+      rating:
+        type: integer

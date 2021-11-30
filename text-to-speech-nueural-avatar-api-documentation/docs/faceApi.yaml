@@ -1,0 +1,20 @@
+paths:
+   :8080/face_api:
+     post:
+       summary: Uploads a file.
+       consumes:
+         - multipart/form-data
+       parameters:
+         - in: formData
+           name: image
+           type: file
+           description: upload an image file (.png)
+         - in: formData
+           name: video
+           type: file
+           description: upload .mp4 file
+       responses:
+              200:
+                description: A video file
+              401:
+                description: Unauthorized users

@@ -63,7 +63,7 @@ describe('API Tests', function () {
                 if (res) {
                     chapterId = res.body.chapter._id
                     updateChapterPayload.chapter_id = chapterId
-                    expect(res.statusCode).to.equal(200);
+                    expect(res.statusCode).to.equal(201);
                     done();
                 }
             });
@@ -82,6 +82,16 @@ describe('API Tests', function () {
     describe('# Chapters', function () {
         it('should get a chapter by its id ', function (done) {
             request(app).get('/api/v1/chapter/' + chapterId).set('Authorization', 'Bearer ' + token).end(function (err, res) {
+                if (res) {
+                    expect(res.statusCode).to.equal(200);
+                    done();
+                }
+            });
+        });
+    });
+        describe('# Chapters', function () {
+        it('should steps of a chapter ', function (done) {
+            request(app).get('/api/v1/chapter/steps/' + chapterId).set('Authorization', 'Bearer ' + token).end(function (err, res) {
                 if (res) {
                     expect(res.statusCode).to.equal(200);
                     done();

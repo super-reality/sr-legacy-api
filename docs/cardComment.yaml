@@ -1,0 +1,131 @@
+schemes:
+  - http
+  - https
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+paths:
+  /cardComment/create:         # path of the user from your endpoint
+    post: # endpoint request type (post request)
+      tags:
+        - Cards
+      security:
+        - Bearer: []
+      summary: Create comment on a card
+      produces:
+      - application/json
+      parameters:
+      - name:       # name of parameter passed
+        type: string
+      - in: body
+        name: Create card
+        description: It enables a user to create comment on trello cards
+        required: false
+        schema:
+          $ref: '#/definitions/cardCommentCreate'
+      responses:
+        201:
+          description: An object with card comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/cardCommentCreate'
+        401:
+          description: Unauthorized users
+  /cardComment/card/{id}:  # path of the user from your endpoint
+    get:
+      tags:
+        - Cards
+      security:
+        - Bearer: []
+      summary: Get coment By card Id
+      produces:
+      - application/json
+      parameters:  # name of parameter passed
+        - in: path
+          name: id
+          description: It enables a user to fetch comments on a card
+          required: false
+          type: string
+      responses:
+        200:
+          description: An object with a card comments values
+        401:
+          description: Unauthorized users
+  /cardComment/{id}:  # path of the user from your endpoint
+    put: # endpoint request type (post request)
+      tags:
+        - Cards
+      security:
+        - Bearer: []
+      summary: Update comment on a card
+      produces:
+      - application/json
+      parameters:
+      - name:       # name of parameter passed
+        type: string
+      - in: body
+        name: Create card
+        description: It enables a user to update comments on trello cards
+        required: false
+        schema:
+          $ref: '#/definitions/cardCommentCreate'
+      responses:
+        201:
+          description: An object with a new card
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/cardCommentCreate'
+        401:
+          description: Unauthorized users
+    get: # endpoint request type (post request)
+      tags:
+        - Cards
+      security:
+        - Bearer: []
+      summary: Get coment By Id
+      produces:
+      - application/json
+      parameters:  # name of parameter passed
+        - in: path
+          name: id
+          description: It enables a user to fetch a card
+          required: false
+          type: string
+      responses:
+        200:
+          description: An object with a chapter values
+        401:
+          description: Unauthorized users
+    delete: # endpoint request type (post request)
+      tags:
+        - Cards
+      security:
+        - Bearer: []
+      summary: Delete card comment By Id
+      produces:
+      - application/json
+      parameters:  # name of parameter passed
+        - in: path
+          name: id
+          description: It enables a user to delete a card
+          required: false
+          type: string
+      responses:
+        200:
+          description: Delete Confirmation
+        401:
+          description: Unauthorized users
+definitions:        # Schema definition for the request body
+  cardCommentCreate:
+    type: object
+    properties:
+      cardId:
+        type: string
+        required: true
+      body:
+        type: string
+        required: true

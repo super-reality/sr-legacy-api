@@ -46,7 +46,7 @@ describe('API Tests', function () {
             request(app).post('/api/v1/step/create').send(createStepPayload).set('Authorization', 'Bearer ' + token).end(function (err, res) {
                 if (res) {
                     stepId = res.body.steps._id
-                    expect(res.statusCode).to.equal(200);
+                    expect(res.statusCode).to.equal(201);
                     done();
                 }
             });
@@ -65,6 +65,17 @@ describe('API Tests', function () {
     describe('# Steps', function () {
         it('should get a step by its id ', function (done) {
             request(app).get('/api/v1/step/' + stepId).set('Authorization', 'Bearer ' + token).end(function (err, res) {
+                if (res) {
+                    expect(res.statusCode).to.equal(200);
+                    done();
+                }
+            });
+        });
+    });
+
+       describe('# Steps', function () {
+        it('should get items of a step ', function (done) {
+            request(app).get('/api/v1/step/items/' + stepId).set('Authorization', 'Bearer ' + token).end(function (err, res) {
                 if (res) {
                     expect(res.statusCode).to.equal(200);
                     done();
